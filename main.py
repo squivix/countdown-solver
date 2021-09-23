@@ -1,5 +1,8 @@
 import random
 import itertools
+import time
+import datetime as dt
+
 
 BIG_NUMBERS = [25, 50, 75, 100]
 MAX_NUMBER = max(BIG_NUMBERS)
@@ -9,15 +12,24 @@ MIN_NUMBER = 1
 def main():
     starting_numbers = generate_starting_numbers()
     target = random.randint(100, 999)
+    start_time = time.time()
     steps = get_steps(starting_numbers, target)
+    end_time = time.time()
+    elapsed_time = end_time-start_time
+
     print("\n" * 100)
-    print(starting_numbers)
-    print(target)
+    print("Time:", str(dt.timedelta(seconds=elapsed_time)))
+    if elapsed_time > 30:
+        print("Fail.")
+    print("Starting numbers:", ", ".join(str(n) for n in starting_numbers))
+    print("Target:", target)
     if steps is None:
         print("Unsolvable!")
     else:
-        print(verify_steps(starting_numbers, target, steps))
+        print("\nSolution:")
         print(parse_steps(steps))
+        print("Solution is valid." if verify_steps(
+            starting_numbers, target, steps) else "Solution is invalid!")
 
 
 def get_steps(remaining_numbers, target, current=None, steps=None, closest=None):
@@ -46,7 +58,8 @@ def get_steps(remaining_numbers, target, current=None, steps=None, closest=None)
             remaining_numbers_copy.remove(operand1)
             remaining_numbers_copy.remove(operand2)
             remaining_numbers_copy.append(current)
-            new_steps = get_steps(remaining_numbers_copy, target, current, steps, closest)
+            new_steps = get_steps(remaining_numbers_copy,
+                                  target, current, steps, closest)
             if new_steps is None:
                 steps.pop()
             else:
@@ -74,7 +87,8 @@ def operate(operand1, operand2, operation):
         return operand1 * operand2
     if operation == '/':
         if not is_integer_result(operand1, operand2):
-            raise Exception(f"Result of {operand1} / {operand2} is not an integer")
+            raise Exception(
+                f"Result of {operand1} / {operand2} is not an integer")
         return operand1 // operand2
 
 
@@ -87,17 +101,17 @@ def verify_steps(starting_numbers, target, steps):
     for step in steps:
         (operand1, operation, operand2, r) = step
         if r != operate(operand1, operand2, operation):
-            return "Invalid!"
+            return False
         try:
             starting_numbers.append(r)
             starting_numbers.remove(operand1)
             starting_numbers.remove(operand2)
         except ValueError:
-            return "Invalid!"
+            return False
         result = r
     if result != target:
-        return "Invalid!"
-    return "Valid"
+        return False
+    return True
 
 
 def parse_steps(steps):
